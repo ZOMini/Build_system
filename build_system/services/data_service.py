@@ -52,7 +52,7 @@ class FileData():
         graph = nx.DiGraph(self.builds | self.tasks)
         list_err = list(nx.simple_cycles(graph))
         if list_err:
-            raise ValueError(f'Detect cyclic dependencies - {list_err}')
+            raise ValueError(f'Cyclic dependencies have been found - {list_err}')
         logger.info('There are no cyclic references.')
 
     def full_dependences(self, name: str, full_list: list, build=False) -> list:
