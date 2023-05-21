@@ -1,19 +1,20 @@
+import logging
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-from core.logger import logging
-from services import file_service as fs
+from api.v1 import builds
+from core.logger import LOGGING
 
-logger = logging.getLogger(__name__)
+app = FastAPI(
+    title='Build System',
+    docs_url='/build/api/openapi',
+    openapi_url='/build/api/openapi.json',
+    default_response_class=ORJSONResponse,
+)
 
-# app = FastAPI(
-#     title='Build System',
-#     docs_url='/build_sys/api/openapi',
-#     openapi_url='/build_sys/api/openapi.json',
-#     default_response_class=ORJSONResponse,
-# )
- 
-data = fs.builds_list
-print(data)
-data2 = fs.tasks_list
-print(data2)
+app.include_router(builds.router, prefix='/api/v1/builds', tags=['builds'])
+
+if __name__ == '__main__':
+    uvicorn.run('main:app', host='0.0.0.0', port=8080, limit_max_requests=128, log_level=logging.INFO, workers=1, reload=True, access_log=True, log_config=LOGGING)

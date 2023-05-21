@@ -1,0 +1,32 @@
+version: "3.2"
+services:
+  build_system:
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+    container_name: build_system
+    env_file:
+      - ./.env
+    ports:
+      - '8080:8080' 
+    networks:
+      - build_system
+    restart: on-failure
+
+  redis_build:
+    image: redis:alpine
+    container_name: redis_build
+    env_file: 
+      - ./.env
+    volumes:
+      - redis_build:/redis_build/data
+    networks:
+      - build_system
+    restart: always
+
+networks:
+  build_system:
+    driver: bridge
+
+volumes:
+  redis_build:

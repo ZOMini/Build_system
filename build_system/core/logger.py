@@ -1,4 +1,6 @@
 import logging
+import logging.config
+import sys
 
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'  # noqa: WPS323
 DATE_FMT = '%d-%b-%y %H:%M:%S'
@@ -25,12 +27,12 @@ LOGGING = {  # noqa: WPS407
         'access': {'formatter': 'access', 'class': 'logging.StreamHandler', 'stream': 'ext://sys.stdout', },
     },
     'loggers': {
-        "": {'handlers': LOG_DEFAULT_HANDLERS, 'level': 'INFO'},
+        '': {'handlers': LOG_DEFAULT_HANDLERS, 'level': 'INFO'},
         'uvicorn.error': {'level': 'INFO'},
         'uvicorn.access': {'handlers': ['access'], 'level': 'INFO', 'propagate': False, },
     },
     'root': {'level': 'INFO', 'formatter': 'verbose', 'handlers': LOG_DEFAULT_HANDLERS, },
 }
 
-
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=DATE_FMT)
+logging.config.dictConfig(LOGGING)
+logger = logging.getLogger('Build System')

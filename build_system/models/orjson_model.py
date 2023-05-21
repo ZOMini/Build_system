@@ -1,5 +1,5 @@
 import orjson
-from pydantic import UUID4, BaseModel
+from pydantic import BaseModel
 
 
 def orjson_dumps(v, *, default):
