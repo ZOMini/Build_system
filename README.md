@@ -5,7 +5,7 @@
  - Тестовое задание [text](https://github.com/ZOMini/Build_system/blob/71d37b7e91447d21ab10d36a7fdacc62f03d2661/task.txt)
 
 ## Стек
-  FastAPI, Pytest, nginx, aiohttp, networkx
+  Python 3.11, FastAPI, Pytest, nginx, aiohttp, networkx
 
 ## Запуск
  - docker-compose up --build
