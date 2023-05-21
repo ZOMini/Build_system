@@ -1,6 +1,5 @@
 import logging
 import logging.config
-import sys
 
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'  # noqa: WPS323
 DATE_FMT = '%d-%b-%y %H:%M:%S'

@@ -5,28 +5,37 @@ services:
       context: ./
       dockerfile: Dockerfile
     container_name: build_system
+    image: build_system_image
     env_file:
       - ./.env
-    ports:
-      - '8080:8080' 
     networks:
-      - build_system
-    restart: on-failure
+      - build_system_nw
 
-  redis_build:
-    image: redis:alpine
-    container_name: redis_build
-    env_file: 
-      - ./.env
-    volumes:
-      - redis_build:/redis_build/data
-    networks:
+  build_system_test:
+    image: build_system_image
+    container_name: build_system_test
+    depends_on:
       - build_system
+      - nginx
+    entrypoint: >
+      sh -c "pytest ./tests -o log_cli=true -v --log-level=DEBUG --disable-warnings"
+    networks:
+      - build_system_nw
+
+  nginx:
+    container_name: nginx
+    image: nginx:1.20.1-alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+    ports:
+      - "8081:8081"
+    depends_on:
+      - build_system
+    networks:
+      - build_system_nw
     restart: always
 
 networks:
-  build_system:
+  build_system_nw:
     driver: bridge
-
-volumes:
-  redis_build:

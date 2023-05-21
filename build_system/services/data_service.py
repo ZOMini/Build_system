@@ -11,7 +11,7 @@ from core.logger import logger
 
 class FileIO():
     @classmethod
-    async def read_file(cls, name: str):
+    async def read_file(cls, name: str) -> dict:
         async with aiofiles.open(f'{settings.files_path}{name}') as f:
             _f = await f.read()
             read_data = yaml.safe_load(_f)
@@ -23,6 +23,7 @@ class FileIO():
             read_tasks = tg.create_task(cls.read_file('tasks.yaml'))
             read_builds = tg.create_task(cls.read_file('builds.yaml'))
         return await read_builds, await read_tasks
+
 
 class FileData():
     def __init__(self, builds, tasks):
@@ -54,13 +55,14 @@ class FileData():
             raise ValueError(f'Detect cyclic dependencies - {list_err}')
         logger.info('There are no cyclic references.')
 
-    def full_dependences(self, name: str, full_list: list, build=False):
+    def full_dependences(self, name: str, full_list: list, build=False) -> list:
         work_list = self.builds[name] if build else self.tasks[name]
         if work_list:
             full_list = full_list + work_list
             for task_name in work_list:
                 full_list = self.full_dependences(task_name, full_list)
         return full_list
+
 
 class FullData():
     def __init__(self, data_file: FileData) -> None:
@@ -81,15 +83,21 @@ class FullData():
         for item in work_array:
             item_full_dep = self.data_file.full_dependences(item, [], build)
             item_full_dep.reverse()
-            # Если не нужно удалять дубликаты тасков, то удалить следующюю строку.
+            # Если не нужно удалять дубликаты тасков, то убрать следующюю строку.
             item_full_dep = self.remove_duplicates(item_full_dep)
             data_dict[item] = item_full_dep
         return data_dict
 
-st = time.time()
-builds, tasks = asyncio.run(FileIO.read_files())
-data_file = FileData(builds, tasks)
-data_file.check_cyclic_dependencies()
-full_data = FullData(data_file)
-ft = time.time()
-logger.info('Init time - %s sec.', ft-st)
+
+def data_init() -> FullData:
+    st = time.time()
+    builds, tasks = asyncio.run(FileIO.read_files())
+    data_file = FileData(builds, tasks)
+    data_file.check_cyclic_dependencies()
+    full_data = FullData(data_file)
+    ft = time.time()
+    logger.info('Init time - %s sec.', ft - st)
+    return full_data
+
+
+full_data = data_init()

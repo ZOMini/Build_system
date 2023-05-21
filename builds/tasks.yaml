@@ -1,4 +1,15 @@
 tasks:
+- name: test1
+  dependencies:
+  - test2
+- name: test2
+  dependencies:
+  - test3
+- name: test3
+  dependencies:
+  - test4
+- name: test4
+  dependencies: []
 - name: bring_aqua_humans
   dependencies: []
 - name: bring_aqua_leprechauns

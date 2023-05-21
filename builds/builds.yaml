@@ -1,4 +1,8 @@
 builds:
+- name: for_tests
+  tasks:
+  - test1
+  - test4
 - name: forward_interest
   tasks:
   - build_teal_leprechauns
