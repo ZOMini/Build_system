@@ -1,4 +1,5 @@
 import asyncio
+from typing import AsyncIterator
 
 import aiohttp
 import pytest
@@ -13,7 +14,7 @@ def event_loop():
 
 
 @pytest_asyncio.fixture(scope="session")
-async def ahttp_client() -> aiohttp.ClientSession:
+async def ahttp_client() -> AsyncIterator[aiohttp.ClientSession]:
     session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(limit=35, loop=asyncio.get_event_loop()))
     yield session
     await session.close()

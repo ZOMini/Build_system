@@ -38,7 +38,7 @@ class FileData():
     def list_tasks(self) -> list[str]:
         return [t for t in self.tasks.keys()]
 
-    def convert_to_dict(self, list_data: list[dict], value: str) -> dict[list]:
+    def convert_to_dict(self, list_data: list[dict], value: str) -> dict[str, list]:
         result = {}
         for d in list_data:
             result[d['name']] = d[value]
@@ -74,7 +74,7 @@ class FullData():
         Через словарь чуть быстрее, чем через set() или иные варианты."""
         return list(dict.fromkeys(data))
 
-    def all_data_full_dependences(self, build=True) -> dict[list]:
+    def all_data_full_dependences(self, build=True) -> dict[str, list]:
         """Метод формирует готовые билды для отправки.
         Этим же методом можно формировать полные зависимости для тасков,
         но не понадобилось, возможность оставил."""

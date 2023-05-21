@@ -15,4 +15,5 @@ async def get_tasks(
 ) -> TasksResponse:
     if body.build not in full_data.data_file.list_builds:
         raise HTTPException(*response.EXCEPTION_404)
-    return await builds_service.get_tasks_by_build(body)
+    resp = await builds_service.get_tasks_by_build(body)
+    return TasksResponse(__root__ =resp)
