@@ -1,6 +1,6 @@
 import asyncio
 import time
-from pprint import pprint
+from typing import Any
 
 import aiofiles
 import networkx as nx
@@ -9,6 +9,7 @@ import yaml
 from core.config import settings
 from core.logger import logger
 
+WORK_LIST = ['builds.yaml', 'tasks.yaml']
 
 class FileIO():
     @classmethod
@@ -19,12 +20,24 @@ class FileIO():
             return read_data
 
     @classmethod
-    async def read_files(cls) -> tuple[dict, dict]:
+    async def read_files(cls, list_files_names: list[str]) -> tuple:
+        result = []
+        dict_tasks: dict[str, asyncio.Task] = {}
         async with asyncio.TaskGroup() as tg:
-            read_tasks = tg.create_task(cls.read_file('tasks.yaml'))
-            read_builds = tg.create_task(cls.read_file('builds.yaml'))
-        return await read_builds, await read_tasks
+            for file_name in list_files_names:
+                task = tg.create_task(cls.read_file(file_name), name=file_name)
+                dict_tasks[file_name] = task
+        for file_name in list_files_names:
+            result.append(dict_tasks[file_name].result())
+        return tuple(result)
 
+    @classmethod
+    async def _read_files_wo_tasks(cls, list_files_names: list[str]) -> tuple:
+        """Можно этим методом. Просто попробовал asyncio.TaskGroup."""
+        result = []
+        for file_name in list_files_names:
+            result.append(await cls.read_file(file_name))
+        return tuple(result)
 
 class FileData():
     def __init__(self, builds, tasks):
@@ -91,13 +104,11 @@ class FullData():
 
 
 def data_init() -> FullData:
-    st = time.time()
-    data_file = FileData(*asyncio.run(FileIO.read_files()))
+    data_file = FileData(*asyncio.run(FileIO.read_files(WORK_LIST)))
     data_file.check_cyclic_dependencies()
     full_data = FullData(data_file)
-    ft = time.time()
-    logger.info('Init time - %s sec.', ft - st)
     return full_data
 
-
+start_time = time.time()
 full_data = data_init()
+logger.info('Init time - %s sec.', time.time() - start_time)

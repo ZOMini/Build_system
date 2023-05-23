@@ -16,29 +16,29 @@ class FileAIO():
             return read_data
 
     @classmethod
-    async def read_files(cls, list_files_names: list[str]) -> dict[str, Any]:
-        result = {}
+    async def read_files(cls, list_files_names: list[str]) -> tuple:
+        result = []
         dict_tasks: dict[str, asyncio.Task] = {}
         async with asyncio.TaskGroup() as tg:
             for file_name in list_files_names:
                 task = tg.create_task(cls.read_file(file_name), name=file_name)
                 dict_tasks[file_name] = task
         for file_name in list_files_names:
-            result[file_name] = dict_tasks[file_name].result()
-        return result
+            result.append(dict_tasks[file_name].result())
+        return tuple(result)
 
     @classmethod
-    async def read_files_2(cls, list_files_names: list[str]) -> dict[str, Any]:
+    async def read_files_wo_tasks(cls, list_files_names: list[str]) -> dict[str, Any]:
         result = {}
         for file_name in list_files_names:
             result[file_name] = await cls.read_file(file_name)
         return result
 
 st = time.time()
-work_list = ['builds.yaml', 'tasks.yaml', 'tasks2.yaml', 'tasks3.yaml']
+work_list = ['builds.yaml', 'tasks.yaml']
 res = asyncio.run(FileAIO.read_files(work_list))
 for file in res:
-    print(res[file])
+    print(file)
 
 # def sync_files():
 #     import os
