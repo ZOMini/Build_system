@@ -18,13 +18,13 @@ class FileAIO():
     @classmethod
     async def read_files(cls, list_files_names: list[str]) -> dict[str, Any]:
         result = {}
-        list_tasks: dict[str, asyncio.Task] = {}
+        dict_tasks: dict[str, asyncio.Task] = {}
         async with asyncio.TaskGroup() as tg:
             for file_name in list_files_names:
                 task = tg.create_task(cls.read_file(file_name), name=file_name)
-                list_tasks[file_name] = task
+                dict_tasks[file_name] = task
         for file_name in list_files_names:
-            result[file_name] = list_tasks[file_name].result()
+            result[file_name] = dict_tasks[file_name].result()
         return result
 
     @classmethod
@@ -36,7 +36,7 @@ class FileAIO():
 
 st = time.time()
 work_list = ['builds.yaml', 'tasks.yaml', 'tasks2.yaml', 'tasks3.yaml']
-res = asyncio.run(FileAIO.read_files_2(work_list))
+res = asyncio.run(FileAIO.read_files(work_list))
 for file in res:
     print(res[file])
 

@@ -1,5 +1,6 @@
 import asyncio
 import time
+from pprint import pprint
 
 import aiofiles
 import networkx as nx
@@ -91,8 +92,7 @@ class FullData():
 
 def data_init() -> FullData:
     st = time.time()
-    builds, tasks = asyncio.run(FileIO.read_files())
-    data_file = FileData(builds, tasks)
+    data_file = FileData(*asyncio.run(FileIO.read_files()))
     data_file.check_cyclic_dependencies()
     full_data = FullData(data_file)
     ft = time.time()
