@@ -1,5 +1,8 @@
 pyyaml==6.0
+types-PyYAML==6.0.12.10
 aiofiles==23.1.0
+# aiofile==3.8.5
+types-aiofiles==23.1.0.3
 pydantic==1.10.7
 pydantic[dotenv]==1.10.7
 fastapi==0.95.2

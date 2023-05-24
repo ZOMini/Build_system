@@ -9,18 +9,18 @@ import yaml
 from core.config import settings
 from core.logger import logger
 
-WORK_LIST = ['builds.yaml', 'tasks.yaml']
+WORK_LIST = ['builds', 'tasks']
 
 class FileIO():
     @classmethod
     async def read_file(cls, name: str) -> dict:
-        async with aiofiles.open(f'{settings.files_path}{name}') as f:
+        async with aiofiles.open(f'{settings.files_path}{name}.yaml') as f:
             _f = await f.read()
             read_data = yaml.safe_load(_f)
             return read_data
 
     @classmethod
-    async def read_files(cls, list_files_names: list[str]) -> tuple:
+    async def read_files(cls, list_files_names: list[str]) -> list:
         result = []
         dict_tasks: dict[str, asyncio.Task] = {}
         async with asyncio.TaskGroup() as tg:
@@ -29,15 +29,15 @@ class FileIO():
                 dict_tasks[file_name] = task
         for file_name in list_files_names:
             result.append(dict_tasks[file_name].result())
-        return tuple(result)
+        return result
 
     @classmethod
-    async def _read_files_wo_tasks(cls, list_files_names: list[str]) -> tuple:
+    async def _read_files_wo_tasks(cls, list_files_names: list[str]) -> list:
         """Можно этим методом. Просто попробовал asyncio.TaskGroup."""
         result = []
         for file_name in list_files_names:
             result.append(await cls.read_file(file_name))
-        return tuple(result)
+        return result
 
 class FileData():
     def __init__(self, builds, tasks):
@@ -104,7 +104,7 @@ class FullData():
 
 
 def data_init() -> FullData:
-    data_file = FileData(*asyncio.run(FileIO.read_files(WORK_LIST)))
+    data_file = FileData(*asyncio.run(FileIO._read_files_wo_tasks(WORK_LIST)))
     data_file.check_cyclic_dependencies()
     full_data = FullData(data_file)
     return full_data
