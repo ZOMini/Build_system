@@ -2,9 +2,10 @@ import asyncio
 import time
 from typing import Any
 
+import aiofile
 import aiofiles
 import yaml
-from yaml import FullLoader
+from yaml import CFullLoader
 
 WORK_DICT = {'builds': 'tasks', 'tasks': 'dependencies'}
 FILE_DIR = './builds/'
@@ -12,28 +13,37 @@ FILE_DIR = './builds/'
 
 class FileAIO():
     @classmethod
+    async def _read_file(cls, name: str, **kwargs) -> Any:
+        """Альтернативный метод, но чуть медленее."""
+        file_path = f'{FILE_DIR}{name}.yaml'
+        async with aiofile.async_open(file_path, mode='r', **kwargs) as f:
+            _f = await f.read()
+            read_data = yaml.load(_f, CFullLoader)
+            return read_data
+
+    @classmethod
     async def read_file(cls, name: str, **kwargs) -> Any:
         file_path = f'{FILE_DIR}{name}.yaml'
         async with aiofiles.open(file_path, mode='r', **kwargs) as f:
             _f = await f.read()
-            read_data = yaml.load(_f, FullLoader)
+            read_data = yaml.load(_f, CFullLoader)
             return read_data
 
     @classmethod
     async def _read_files(cls) -> dict[str, list[dict]]:
-        """Альтернативный метод, но беcполезный :)."""
+        """Альтернативный метод, но беcполезный."""
         result = {}
         dict_tasks: dict[str, asyncio.Task] = {}
         async with asyncio.TaskGroup() as tg:
             for file_name in WORK_DICT:
-                task = tg.create_task(cls.read_file(file_name), name=file_name)
+                task = tg.create_task(cls._read_file(file_name), name=file_name)
                 dict_tasks[file_name] = task
         for file_name in WORK_DICT:
             result.update(dict_tasks[file_name].result())
         return result
 
     @classmethod
-    async def read_files_wo_tasks(cls) -> dict[str, list[dict]]:
+    async def read_files(cls) -> dict[str, list[dict]]:
         result: dict[str, list[dict]] = {}
         for file_name in WORK_DICT:
             result.update(await cls.read_file(file_name))
@@ -61,10 +71,6 @@ class FileData():
 
 
 st = time.time()
-# print(asyncio.run(FileAIO._read_file('builds')))
-file = asyncio.run(FileAIO.read_files_wo_tasks())
-# print(file)
+file = asyncio.run(FileAIO._read_files())
 file_data = FileData(file)
-# print(file_data.builds)
-# print(file_data.tasks)
 print(f'deltatime {time.time() - st}')
