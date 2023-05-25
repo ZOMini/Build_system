@@ -24,6 +24,6 @@ if __name__ == '__main__':
                 limit_max_requests=128,
                 log_level=logging.INFO,
                 workers=1,
-                reload=True,
+                reload=False,
                 access_log=True,
                 log_config=LOGGING)
