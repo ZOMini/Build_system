@@ -1,38 +1,61 @@
+# Файл для опытов:).
 import asyncio
+import logging
 import time
 from typing import Any
 
+import aiofile
 import aiofiles
 import networkx as nx
 import yaml
 from yaml import CFullLoader
 
-from core.config import settings
-from core.logger import logger
-
 WORK_DICT = {'builds': 'tasks', 'tasks': 'dependencies'}
+FILE_DIR = './builds/'
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 class FileAIO:
-    @classmethod
+    def __init__(self):
+        self.file= {}
+    
+    async def _read_file(self, name: str, **kwargs) -> Any:
+        """Альтернативный метод, но чуть медленее."""
+        file_path = f'{FILE_DIR}{name}.yaml'
+        async with aiofile.async_open(file_path, mode='r', **kwargs) as f:
+            _f = await f.read()
+            read_data = yaml.load(_f, CFullLoader)
+            return read_data
+
     async def read_file(self, name: str, **kwargs) -> Any:
-        file_path = f'{settings.files_path}{name}.yaml'
+        file_path = f'{FILE_DIR}{name}.yaml'
         async with aiofiles.open(file_path, mode='r', **kwargs) as f:
             _f = await f.read()
             read_data = yaml.load(_f, CFullLoader)
             return read_data
 
-    @classmethod
-    async def read_files(self) -> dict[str, list[dict]]:
+    async def _read_files(self) -> dict[str, list[dict]]:
+        """Альтернативный метод, но беcполезный."""
         result = {}
+        dict_tasks: dict[str, asyncio.Task] = {}
+        async with asyncio.TaskGroup() as tg:
+            for file_name in WORK_DICT:
+                task = tg.create_task(self._read_file(file_name), name=file_name)
+                dict_tasks[file_name] = task
+        for file_name in WORK_DICT:
+            result.update(dict_tasks[file_name].result())
+        return result
+
+    async def read_files(self) -> dict[str, list[dict]]:
+        result: dict[str, list[dict]] = {}
         for file_name in WORK_DICT:
             result.update(await self.read_file(file_name))
         return result
 
-
 class FileData():
     """@DynamicAttrs"""
-    __slot__ = tuple(WORK_DICT)
+    __slot__ = WORK_DICT.keys()
 
     def __init__(self, data: dict[str, list[dict]]) -> None:
         for k, v in data.items():
@@ -68,18 +91,15 @@ class WorkFileData(FileData):
         super().__init__(data)
         self.builds: dict[str, list[dict]]
         self.tasks: dict[str, list[dict]]
+        self.builds_responses = self.builds_full_dependences() 
 
     @property
-    def list_builds(self):
+    def list_builds(self) -> list[str]:
         return [b for b in self.builds.keys()]
 
     @property
-    def list_tasks(self):
+    def list_tasks(self) -> list[str]:
         return [t for t in self.tasks.keys()]
-
-    @property
-    def builds_responses(self):
-        return self.builds_full_dependences() 
 
     def full_dependences(self, name: str, full_list: list, build=False) -> list:
         """Рекурсия для получения зависимостей на всю глубину."""
@@ -110,10 +130,31 @@ class WorkFileData(FileData):
 
 def init_data():
     st = time.time()
-    file = asyncio.run(FileAIO.read_files())
+    file = asyncio.run(FileAIO._read_files())
     work_file_data = WorkFileData(file)
     work_file_data.check_cyclic_dependencies()
     logger.warning(f'init deltatime {time.time() - st}')
     return work_file_data.builds_responses
 
-full_data = init_data()
+builds_responses = init_data()
+
+
+class Aa:
+    def __init__ (self, a1: str, a2: str):
+        self.a1 = a1
+        self.a2 = a2
+
+    @property
+    def list_a(self):
+        return [self.a1, self.a2]
+
+    @list_a.setter
+    def list_a(self, set_dict: dict) -> None:
+        for name, value in set_dict.items():
+            setattr(self, name, value)
+
+
+aa = Aa('a1', 'a2')
+print(aa.list_a)
+aa.list_a = {'a1': 'a11', 'a2': 'a22'}
+print(aa.list_a)

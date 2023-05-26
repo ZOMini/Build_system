@@ -4,7 +4,6 @@ import logging
 import time
 from typing import Any
 
-import aiofile
 import aiofiles
 import networkx as nx
 import yaml
@@ -16,18 +15,9 @@ FILE_DIR = './builds/'
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
-class FileAIO():
+class FileAIO:
     @classmethod
-    async def _read_file(cls, name: str, **kwargs) -> Any:
-        """Альтернативный метод, но чуть медленее."""
-        file_path = f'{FILE_DIR}{name}.yaml'
-        async with aiofile.async_open(file_path, mode='r', **kwargs) as f:
-            _f = await f.read()
-            read_data = yaml.load(_f, CFullLoader)
-            return read_data
-
-    @classmethod
-    async def read_file(cls, name: str, **kwargs) -> Any:
+    async def read_file(self, name: str, **kwargs) -> Any:
         file_path = f'{FILE_DIR}{name}.yaml'
         async with aiofiles.open(file_path, mode='r', **kwargs) as f:
             _f = await f.read()
@@ -35,28 +25,16 @@ class FileAIO():
             return read_data
 
     @classmethod
-    async def _read_files(cls) -> dict[str, list[dict]]:
-        """Альтернативный метод, но беcполезный."""
+    async def read_files(self) -> dict[str, list[dict]]:
         result = {}
-        dict_tasks: dict[str, asyncio.Task] = {}
-        async with asyncio.TaskGroup() as tg:
-            for file_name in WORK_DICT:
-                task = tg.create_task(cls._read_file(file_name), name=file_name)
-                dict_tasks[file_name] = task
         for file_name in WORK_DICT:
-            result.update(dict_tasks[file_name].result())
+            result.update(await self.read_file(file_name))
         return result
 
-    @classmethod
-    async def read_files(cls) -> dict[str, list[dict]]:
-        result: dict[str, list[dict]] = {}
-        for file_name in WORK_DICT:
-            result.update(await cls.read_file(file_name))
-        return result
 
 class FileData():
     """@DynamicAttrs"""
-    __slot__ = WORK_DICT
+    __slot__ = tuple(WORK_DICT)
 
     def __init__(self, data: dict[str, list[dict]]) -> None:
         for k, v in data.items():
@@ -92,15 +70,18 @@ class WorkFileData(FileData):
         super().__init__(data)
         self.builds: dict[str, list[dict]]
         self.tasks: dict[str, list[dict]]
-        self.builds_responses = self.builds_full_dependences() 
 
     @property
-    def list_builds(self) -> list[str]:
+    def list_builds(self):
         return [b for b in self.builds.keys()]
 
     @property
-    def list_tasks(self) -> list[str]:
+    def list_tasks(self):
         return [t for t in self.tasks.keys()]
+
+    @property
+    def builds_responses(self):
+        return self.builds_full_dependences() 
 
     def full_dependences(self, name: str, full_list: list, build=False) -> list:
         """Рекурсия для получения зависимостей на всю глубину."""
@@ -131,8 +112,8 @@ class WorkFileData(FileData):
 
 def init_data():
     st = time.time()
-    work_file = asyncio.run(FileAIO._read_files())
-    work_file_data = WorkFileData(work_file)
+    file = asyncio.run(FileAIO.read_files())
+    work_file_data = WorkFileData(file)
     work_file_data.check_cyclic_dependencies()
     logger.warning(f'init deltatime {time.time() - st}')
     return work_file_data.builds_responses
@@ -154,7 +135,7 @@ class Aa:
         for name, value in set_dict.items():
             setattr(self, name, value)
 
-    
+
 aa = Aa('a1', 'a2')
 print(aa.list_a)
 aa.list_a = {'a1': 'a11', 'a2': 'a22'}

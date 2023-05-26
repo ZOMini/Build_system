@@ -8,12 +8,12 @@ from services.data_service import full_data
 router = APIRouter()
 
 
-@router.post('/get_tasks', responses=response.RESPONSE_404)
+@router.post('/get_tasks', responses=response.RESPONSE_404.items())
 async def get_tasks(
     body: BodyBuildModel,
     builds_service: APIService = Depends(get_api_service)
 ) -> TasksResponse:
-    if body.build not in full_data.data_file.list_builds:
+    if body.build not in full_data.keys():
         raise HTTPException(*response.EXCEPTION_404)
     resp = await builds_service.get_tasks_by_build(body)
     return TasksResponse(__root__ =resp)
