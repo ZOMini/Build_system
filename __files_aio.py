@@ -74,13 +74,25 @@ class FileData():
             result[d['name']] = d[value]
         return result
 
+    def check_cyclic_dependencies(self) -> None:
+        '''Проверяет на циклические зависимости таски + билды,
+        на все глубину, возможно излишне.
+        Возможно достаточно было проверять только по действующим билдам,
+        но сделано по полной.'''
+        full_dict ={WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
+        graph = nx.DiGraph(full_dict)
+        list_err = list(nx.simple_cycles(graph))
+        if list_err:
+            raise ValueError(f'Cyclic dependencies have been found - {list_err}')
+        logger.warning('There are no cyclic references.')
+
 
 class WorkFileData(FileData):
-    builds: dict[str, list[dict]]
-    tasks: dict[str, list[dict]]
-    
     def __init__(self, data: dict[str, list[dict]]) -> None:
         super().__init__(data)
+        self.builds: dict[str, list[dict]]
+        self.tasks: dict[str, list[dict]]
+        self.builds_responses = self.builds_full_dependences() 
 
     @property
     def list_builds(self) -> list[str]:
@@ -90,21 +102,60 @@ class WorkFileData(FileData):
     def list_tasks(self) -> list[str]:
         return [t for t in self.tasks.keys()]
 
-    def check_cyclic_dependencies(self) -> None:
-        '''Проверяет на циклические зависимости таски + билды,
-        на все глубину, возможно излишне.
-        Возможно достаточно было проверять только по действующим билдам,
-        но сделано по полной. Да и рекурсия захлебнется, придется шаманить.'''
-        graph = nx.DiGraph(self.builds | self.tasks)
-        list_err = list(nx.simple_cycles(graph))
-        if list_err:
-            raise ValueError(f'Cyclic dependencies have been found - {list_err}')
-        logger.warning('There are no cyclic references.')
+    def full_dependences(self, name: str, full_list: list, build=False) -> list:
+        """Рекурсия для получения зависимостей на всю глубину."""
+        work_list: list = self.builds[name] if build else self.tasks[name]
+        if work_list:
+            full_list = full_list + work_list
+            for task_name in work_list:
+                full_list = self.full_dependences(task_name, full_list)
+        return full_list
+
+    def remove_duplicates(self, data: list) -> list:
+        """Удаляем дубликаты task-ов(хотя из задания не понятно - нужно ли удалять).
+        Через словарь чуть быстрее, чем через set() или иные варианты."""
+        return list(dict.fromkeys(data))
+
+    def builds_full_dependences(self) -> dict[str, list[str]]:
+        """Метод формирует готовые билды для отправки.
+        Этим же методом можно формировать полные зависимости для тасков,
+        но не понадобилось, возможность оставил."""
+        data_dict = {}
+        for item in self.list_builds:
+            item_full_dep = self.full_dependences(item, [], True)
+            item_full_dep.reverse()
+            # Если не нужно удалять дубликаты тасков, то убрать следующюю строку.
+            item_full_dep = self.remove_duplicates(item_full_dep)
+            data_dict[item] = item_full_dep
+        return data_dict
+
+def init_data():
+    st = time.time()
+    work_file = asyncio.run(FileAIO._read_files())
+    work_file_data = WorkFileData(work_file)
+    work_file_data.check_cyclic_dependencies()
+    logger.warning(f'init deltatime {time.time() - st}')
+    return work_file_data.builds_responses
+
+builds_responses = init_data()
 
 
-st = time.time()
-file = asyncio.run(FileAIO._read_files())
-file_data = WorkFileData(file)
-file_data.check_cyclic_dependencies()
-print(f'deltatime {time.time() - st}')
+class Aa:
+    def __init__ (self, a1: str, a2: str):
+        self.a1 = a1
+        self.a2 = a2
 
+    @property
+    def list_a(self):
+        return [self.a1, self.a2]
+
+    @list_a.setter
+    def list_a(self, set_dict: dict) -> None:
+        for name, value in set_dict.items():
+            setattr(self, name, value)
+
+    
+aa = Aa('a1', 'a2')
+print(aa.list_a)
+aa.list_a = {'a1': 'a11', 'a2': 'a22'}
+print(aa.list_a)
