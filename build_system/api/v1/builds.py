@@ -8,7 +8,7 @@ from services.data_service import full_data
 router = APIRouter()
 
 
-@router.post('/get_tasks', responses=response.RESPONSE_404.items())
+@router.post('/get_tasks', responses=response.RESPONSE_404)
 async def get_tasks(
     body: BodyBuildModel,
     builds_service: APIService = Depends(get_api_service)
