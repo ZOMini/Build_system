@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class APIService():
-
     async def get_tasks_by_build(self, build: BodyBuildModel) -> list[str]:
         return full_data[build.build]
 

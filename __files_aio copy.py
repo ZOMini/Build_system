@@ -18,7 +18,6 @@ logger.setLevel(logging.WARNING)
 
 
 class FileAIO:
-
     def __init__(self):
         self.file = {}
 
@@ -145,7 +144,6 @@ builds_responses = init_data()
 
 
 class Aa:
-
     def __init__(self, a1: str, a2: str):
         self.a1 = a1
         self.a2 = a2

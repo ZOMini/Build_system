@@ -17,7 +17,6 @@ logger.setLevel(logging.WARNING)
 
 
 class FileAIO:
-
     @classmethod
     async def read_file(self, name: str, **kwargs) -> Any:
         file_path = f'{FILE_DIR}{name}.yaml'
@@ -36,7 +35,6 @@ class FileAIO:
 
 class FileData():
     """@DynamicAttrs"""
-
     __slot__ = tuple(WORK_DICT)
 
     def __init__(self, data: dict[str, list[dict]]) -> None:
@@ -69,7 +67,6 @@ class FileData():
 
 
 class WorkFileData(FileData):
-
     def __init__(self, data: dict[str, list[dict]]) -> None:
         super().__init__(data)
         self.builds: dict[str, list[dict]]
@@ -128,7 +125,6 @@ builds_responses = init_data()
 
 
 class Aa:
-
     def __init__(self, a1: str, a2: str):
         self.a1 = a1
         self.a2 = a2
