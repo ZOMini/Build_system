@@ -15,7 +15,9 @@ FILE_DIR = './builds/'
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+
 class FileAIO:
+
     @classmethod
     async def read_file(self, name: str, **kwargs) -> Any:
         file_path = f'{FILE_DIR}{name}.yaml'
@@ -34,6 +36,7 @@ class FileAIO:
 
 class FileData():
     """@DynamicAttrs"""
+
     __slot__ = tuple(WORK_DICT)
 
     def __init__(self, data: dict[str, list[dict]]) -> None:
@@ -57,7 +60,7 @@ class FileData():
         на все глубину, возможно излишне.
         Возможно достаточно было проверять только по действующим билдам,
         но сделано по полной.'''
-        full_dict ={WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
+        full_dict = {WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
         graph = nx.DiGraph(full_dict)
         list_err = list(nx.simple_cycles(graph))
         if list_err:
@@ -66,6 +69,7 @@ class FileData():
 
 
 class WorkFileData(FileData):
+
     def __init__(self, data: dict[str, list[dict]]) -> None:
         super().__init__(data)
         self.builds: dict[str, list[dict]]
@@ -81,7 +85,7 @@ class WorkFileData(FileData):
 
     @property
     def builds_responses(self):
-        return self.builds_full_dependences() 
+        return self.builds_full_dependences()
 
     def full_dependences(self, name: str, full_list: list, build=False) -> list:
         """Рекурсия для получения зависимостей на всю глубину."""
@@ -110,6 +114,7 @@ class WorkFileData(FileData):
             data_dict[item] = item_full_dep
         return data_dict
 
+
 def init_data():
     st = time.time()
     file = asyncio.run(FileAIO.read_files())
@@ -118,11 +123,13 @@ def init_data():
     logger.warning(f'init deltatime {time.time() - st}')
     return work_file_data.builds_responses
 
+
 builds_responses = init_data()
 
 
 class Aa:
-    def __init__ (self, a1: str, a2: str):
+
+    def __init__(self, a1: str, a2: str):
         self.a1 = a1
         self.a2 = a2
 

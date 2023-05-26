@@ -12,7 +12,7 @@
  - Функциональные тесты в docker-compose - build_system_test
  - Заполняем .env (см. .env.template) - если нужно изменить базовые значения.
  - Проверка на циклические зависимости в тасках и билдах, происходит при старте сервиса. Если присутствуют, то сервис не стартанет.
- - Дуближи тасков удаляются(в задании что с ними делать не сказано), остается самый ранний. Можно откорректировать - [code](https://github.com/ZOMini/Build_system/blob/master/build_system/services/data_service.py#L87)
+ - Дуближи тасков удаляются(в задании что с ними делать не сказано), остается самый ранний. Можно откорректировать - [code](https://github.com/ZOMini/Build_system/blob/master/build_system/services/data_service.py#L106)
 
 ## URL(по умолчанию)
  - http://localhost:8081/build/api/openapi

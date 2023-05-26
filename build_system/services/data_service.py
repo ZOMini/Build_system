@@ -55,7 +55,7 @@ class FileData():
         на все глубину, возможно излишне.
         Возможно достаточно было проверять только по действующим билдам,
         но сделано по полной.'''
-        full_dict ={WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
+        full_dict = {WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
         graph = nx.DiGraph(full_dict)
         list_err = list(nx.simple_cycles(graph))
         if list_err:
@@ -79,7 +79,7 @@ class WorkFileData(FileData):
 
     @property
     def builds_responses(self):
-        return self.builds_full_dependences() 
+        return self.builds_full_dependences()
 
     def full_dependences(self, name: str, full_list: list, build=False) -> list:
         """Рекурсия для получения зависимостей на всю глубину."""
@@ -96,9 +96,7 @@ class WorkFileData(FileData):
         return list(dict.fromkeys(data))
 
     def builds_full_dependences(self) -> dict[str, list[str]]:
-        """Метод формирует готовые билды для отправки.
-        Этим же методом можно формировать полные зависимости для тасков,
-        но не понадобилось, возможность оставил."""
+        """Метод формирует готовые билды для отправки."""
         data_dict = {}
         for item in self.list_builds:
             item_full_dep = self.full_dependences(item, [], True)
@@ -108,6 +106,7 @@ class WorkFileData(FileData):
             data_dict[item] = item_full_dep
         return data_dict
 
+
 def init_data():
     st = time.time()
     file = asyncio.run(FileAIO.read_files())
@@ -115,5 +114,6 @@ def init_data():
     work_file_data.check_cyclic_dependencies()
     logger.warning(f'init deltatime {time.time() - st}')
     return work_file_data.builds_responses
+
 
 full_data = init_data()

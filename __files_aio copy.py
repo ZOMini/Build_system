@@ -16,10 +16,12 @@ FILE_DIR = './builds/'
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+
 class FileAIO:
+
     def __init__(self):
-        self.file= {}
-    
+        self.file = {}
+
     async def _read_file(self, name: str, **kwargs) -> Any:
         """Альтернативный метод, но чуть медленее."""
         file_path = f'{FILE_DIR}{name}.yaml'
@@ -53,6 +55,7 @@ class FileAIO:
             result.update(await self.read_file(file_name))
         return result
 
+
 class FileData():
     """@DynamicAttrs"""
     __slot__ = WORK_DICT.keys()
@@ -78,7 +81,7 @@ class FileData():
         на все глубину, возможно излишне.
         Возможно достаточно было проверять только по действующим билдам,
         но сделано по полной.'''
-        full_dict ={WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
+        full_dict = {WORK_DICT[d]: getattr(self, d) for d in WORK_DICT}
         graph = nx.DiGraph(full_dict)
         list_err = list(nx.simple_cycles(graph))
         if list_err:
@@ -91,7 +94,7 @@ class WorkFileData(FileData):
         super().__init__(data)
         self.builds: dict[str, list[dict]]
         self.tasks: dict[str, list[dict]]
-        self.builds_responses = self.builds_full_dependences() 
+        self.builds_responses = self.builds_full_dependences()
 
     @property
     def list_builds(self) -> list[str]:
@@ -128,6 +131,7 @@ class WorkFileData(FileData):
             data_dict[item] = item_full_dep
         return data_dict
 
+
 def init_data():
     st = time.time()
     file = asyncio.run(FileAIO._read_files())
@@ -136,11 +140,13 @@ def init_data():
     logger.warning(f'init deltatime {time.time() - st}')
     return work_file_data.builds_responses
 
+
 builds_responses = init_data()
 
 
 class Aa:
-    def __init__ (self, a1: str, a2: str):
+
+    def __init__(self, a1: str, a2: str):
         self.a1 = a1
         self.a2 = a2
 
